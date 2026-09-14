@@ -70,7 +70,7 @@ func main() {
 			cost = fmt.Sprintf("%.2f %s ⚠️", *li.Cost, li.Currency)
 			bad++
 		}
-		fmt.Fprintf(&b, "%-16s %-24s %12.2f %-16s %s\n", truncate(oci.CNService(li.Service), 16), truncate(oci.SKUCN(li.SKU), 24), li.Quantity, li.Unit, cost)
+		fmt.Fprintf(&b, "%-16s %-24s %12.2f %-16s %s\n", truncate(oci.CNService(li.Service), 16), truncate(oci.SKUCN(li.SKU), 24), li.Quantity, oci.UnitCN(li.Unit), cost)
 	}
 	if res.CostFailed {
 		bad++

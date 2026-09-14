@@ -52,3 +52,23 @@ func SKUCN(sku string) string {
 	}
 	return sku
 }
+
+func init() {
+	serviceCN["telemetry"] = "遥测监控"
+	serviceCN["vm"] = "虚拟机"
+}
+
+// unitCN maps common units.
+func UnitCN(u string) string {
+	repl := strings.NewReplacer(
+		"OCPU Hours", "OCPU·时",
+		"OCPU Per Hour", "OCPU·时",
+		"GB Months", "GB·月",
+		"Gigabyte Per Hour", "GB·时",
+		"GB Hours", "GB·时",
+		"Million Datapoints", "百万数据点",
+		"Count", "个",
+		"Each", "个",
+	)
+	return repl.Replace(u)
+}
