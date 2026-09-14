@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -129,7 +130,8 @@ func QueryUsage(p *Profile, timeStart, timeEnd time.Time, timeout time.Duration)
 			"tenantId":         p.Tenancy,
 			"timeUsageStarted": timeStart.UTC().Format("2006-01-02T15:04:05.000Z"),
 			"timeUsageEnded":   timeEnd.UTC().Format("2006-01-02T15:04:05.000Z"),
-			"granularity":      "TOTAL",
+			"granularity":      "DAILY",
+			"groupBy":          []string{"service", "skuName", "unit"},
 			"queryType":        queryType,
 		})
 		path := "/20200107/usage"
@@ -152,10 +154,20 @@ func QueryUsage(p *Profile, timeStart, timeEnd time.Time, timeout time.Duration)
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			return nil, fmt.Errorf("%s api status %d", queryType, resp.StatusCode)
+			body, _ := io.ReadAll(io.LimitReader(resp.Body, 500))
+			return nil, fmt.Errorf("%s api status %d: %s", queryType, resp.StatusCode, body)
 		}
-		var items []rawItem
-		return items, json.NewDecoder(resp.Body).Decode(&items)
+		raw, _ := io.ReadAll(resp.Body)
+		if os.Getenv("OCI_DEBUG") != "" {
+			fmt.Fprintln(os.Stderr, string(raw[:min(len(raw), 800)]))
+		}
+		var out struct {
+			Items []rawItem `json:"items"`
+		}
+		if err := json.Unmarshal(raw, &out); err != nil {
+			return nil, err
+		}
+		return out.Items, nil
 	}
 
 	usageItems, err := fetch("USAGE")

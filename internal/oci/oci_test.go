@@ -95,17 +95,17 @@ func TestQueryUsageAggregation(t *testing.T) {
 		json.NewDecoder(r.Body).Decode(&req)
 		w.Header().Set("Content-Type", "application/json")
 		if req["queryType"] == "USAGE" {
-			w.Write([]byte(`[
+			w.Write([]byte(`{"items":[
 				{"service":"Compute","skuName":"Standard - A1","unit":"OCPU Per Hour","computedQuantity":100},
 				{"service":"Virtual Cloud Network","skuName":"Outbound Data Transfer Zone 2","unit":"GB Months","computedQuantity":12.5}
-			]`))
+			]}`))
 			return
 		}
-		w.Write([]byte(`[
+		w.Write([]byte(`{"items":[
 			{"service":"Compute","skuName":"Standard - A1","computedAmount":0,"currency":"SGD"},
 			{"service":"Compute","skuName":"Standard - A1","computedAmount":0,"currency":"USD"},
 			{"service":"Load Balancer","skuName":"Flexible LB Bandwidth","computedAmount":4.2,"currency":"USD"}
-		]`))
+		]}`))
 	}))
 	defer srv.Close()
 	t.Setenv("OCI_USAGE_HOST", "http://"+srv.Listener.Addr().String())
@@ -156,7 +156,7 @@ func TestQueryUsageCostFailure(t *testing.T) {
 		json.NewDecoder(r.Body).Decode(&req)
 		w.Header().Set("Content-Type", "application/json")
 		if req["queryType"] == "USAGE" {
-			w.Write([]byte(`[{"service":"Compute","skuName":"Standard - A1","computedQuantity":1}]`))
+			w.Write([]byte(`{"items":[{"service":"Compute","skuName":"Standard - A1","computedQuantity":1}]}`))
 			return
 		}
 		w.WriteHeader(500)
