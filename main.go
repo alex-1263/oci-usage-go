@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -39,7 +40,7 @@ func pushFeishu(webhook, text string) error {
 
 func main() {
 	var (
-		config  = flag.String("c", filepath.Join(os.Getenv("HOME"), ".oci", "config"), "OCI config path")
+		config  = flag.String("c", defaultConfigPath(), "OCI config path")
 		profile = flag.String("p", "DEFAULT", "config profile section")
 		month   = flag.String("month", "", "month to query (YYYY-MM); default current month")
 		webhook = flag.String("feishu", os.Getenv("FEISHU_WEBHOOK"), "feishu bot webhook url (or env FEISHU_WEBHOOK)")
@@ -93,6 +94,19 @@ func main() {
 	if bad > 0 {
 		os.Exit(2) // non-zero so cron wrappers / monitors can react
 	}
+}
+
+// defaultConfigPath resolves ~/.oci/config without relying solely on $HOME,
+// which is empty under systemd services (a bare $HOME join degenerates into
+// the relative path ".oci/config" and fails with cwd=/).
+func defaultConfigPath() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return filepath.Join(h, ".oci", "config")
+	}
+	if u, err := user.Current(); err == nil && u.HomeDir != "" {
+		return filepath.Join(u.HomeDir, ".oci", "config")
+	}
+	return ".oci/config"
 }
 
 func monthRange(m string) (time.Time, time.Time) {
